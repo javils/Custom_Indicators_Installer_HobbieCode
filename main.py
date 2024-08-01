@@ -10,6 +10,10 @@ def find_files(folder):
     return glob.glob(os.path.join(folder, '**', '*.*'), recursive=True)
 
 
+def there_are_scripts(folder):
+    return len(glob.glob(os.path.join(folder, '**', '*.sxp'), recursive=True)) > 0
+
+
 def is_valid_sqx_folder(folder):
     files = glob.glob(os.path.join(folder, '**', '*.exe'), recursive=True)
     check_files = ["StrategyQuantX.exe", "sqcli.exe", "CodeEditor.exe"]
@@ -57,6 +61,11 @@ def install_custom_indicators():
     user_sqx_folder = os.path.join(sqx_folder, 'user')
     custom_indicators_folder = os.path.join(sqx_folder, 'custom_indicators')
     files = find_files(scripts_folder)
+
+    if not there_are_scripts(scripts_folder):
+        messagebox.showinfo("Empty scripts",
+                            "You are selecting an empty scripts folder, please select the correct one.")
+        return
 
     if not is_valid_sqx_folder(sqx_folder):
         messagebox.showerror("Invalid SQX folder",
