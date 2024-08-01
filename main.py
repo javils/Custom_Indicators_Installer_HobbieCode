@@ -10,6 +10,15 @@ def find_files(folder):
     return glob.glob(os.path.join(folder, '**', '*.*'), recursive=True)
 
 
+def is_valid_sqx_folder(folder):
+    files = glob.glob(os.path.join(folder, '**', '*.exe'), recursive=True)
+    check_files = ["StrategyQuantX.exe", "sqcli.exe", "CodeEditor.exe"]
+
+    file_names = [os.path.basename(file) for file in files]
+
+    return all(check_file in file_names for check_file in check_files)
+
+
 def install_sxp_file(file, destination):
     try:
         with zipfile.ZipFile(file, 'r') as zip_ref:
@@ -48,6 +57,11 @@ def install_custom_indicators():
     user_sqx_folder = os.path.join(sqx_folder, 'user')
     custom_indicators_folder = os.path.join(sqx_folder, 'custom_indicators')
     files = find_files(scripts_folder)
+
+    if not is_valid_sqx_folder(sqx_folder):
+        messagebox.showerror("Invalid SQX folder",
+                             "You are selecting an invalid SQX folder, please select the correct one.")
+        return
 
     for file in files:
         _, file_extension = os.path.splitext(file)
