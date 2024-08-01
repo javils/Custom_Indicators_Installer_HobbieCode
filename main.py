@@ -4,6 +4,7 @@ import os
 import glob
 import shutil
 from tkinter import filedialog, messagebox
+import xml.etree.ElementTree as ET
 
 
 def find_files(folder):
@@ -55,6 +56,39 @@ def install_tradestation_file(file, destination):
     shutil.copy(file, tradestation_file)
 
 
+def install_custom_blocks_files(file, destination):
+    custom_blocks_file = os.path.join(destination, 'settings', 'customBlocks.xml')
+
+    try:
+        element_tree = ET.parse(custom_blocks_file)
+        root_element = element_tree.getroot()
+    except FileNotFoundError:
+        root_element = ET.Element('CustomBlocks')
+        element_tree = ET.ElementTree(root_element)
+
+    items = root_element.findall("Item")
+
+    try:
+        file_element = ET.parse(file).getroot()
+    except Exception as e:
+        messagebox.showerror("Error", f"Unknown error {e}.")
+        return
+
+    file_items = file_element.findall("Item")
+    for file_item in file_items:
+        if len(items) == 0:
+            root_element.append(file_item)
+        else:
+            root_item_key_values = list()
+            for item in items:
+                root_item_key_values.append(item.attrib.get("key"))
+
+            if file_item.attrib.get("key") not in root_item_key_values:
+                root_element.append(file_item)
+
+    element_tree.write(custom_blocks_file, encoding='utf-8', xml_declaration=True)
+
+
 def install_custom_indicators():
     scripts_folder = entry_scripts_folder.get()
     sqx_folder = entry_sqx_folder.get()
@@ -85,6 +119,8 @@ def install_custom_indicators():
             install_mql4_file(file, custom_indicators_folder)
         elif file_extension == ".eld":
             install_tradestation_file(file, custom_indicators_folder)
+        elif file_extension == ".xml":
+            install_custom_blocks_files(file, user_sqx_folder)
 
 
 def select_folder(entry):
