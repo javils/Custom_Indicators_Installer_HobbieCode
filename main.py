@@ -1,3 +1,4 @@
+import sys
 import tkinter as tk
 import zipfile
 import os
@@ -154,6 +155,11 @@ def show_about_me():
     messagebox.showinfo("About me", msg)
 
 
+def get_resource_path(relative_path):
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+
 root = tk.Tk()
 root.title("SQX Custom Indicators Installer")
 root.resizable(False, False)
@@ -193,4 +199,6 @@ button_scripts_sqx_folder_selector.grid(row=1, column=2, padx=10, pady=10)
 button_install = tk.Button(root, text="Install", command=install_custom_indicators)
 button_install.grid(row=2, column=0, columnspan=3, pady=20)
 
+# This is here because a bug, if I put the icon in the top of the program, then the sizes of the windows changes.
+root.iconbitmap(get_resource_path("./icon/icon.ico"))
 root.mainloop()
