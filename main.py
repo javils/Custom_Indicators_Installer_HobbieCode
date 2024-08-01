@@ -122,6 +122,9 @@ def install_custom_indicators():
         elif file_extension == ".xml":
             install_custom_blocks_files(file, user_sqx_folder)
 
+    messagebox.showinfo("Installation success",
+                         "The installation is finished!.")
+
 
 def select_folder(entry):
     folder = filedialog.askdirectory()
@@ -133,19 +136,18 @@ def select_folder(entry):
 def show_explanation():
     msg = (
         "To install the scripts:\n"
+        "0. Close StrategyQuant X\n"
         "1. Select the folder with the downloaded scripts.\n"
         "2. Select the folder where your SQX is installed.\n"
         "3. Press Install button.\n"
-        "4. Go to StrategyQuant and open CodeEditor.\n"
-        "5. Press Compile All button and wait until finish.\n"
-        "6. Restart StrategyQuant.\n"
+        "4. Restart StrategyQuant X.\n"
     )
     messagebox.showinfo("Install info", msg)
 
 
 def show_about_me():
     msg = (
-        "SQXIndicatorInstaller v0.1\n"
+        "SQXIndicatorInstaller v0.1\n\n"
         "Author: Javier Luque\n"
         "GitHub: https://github.com/javils\n"
     )
