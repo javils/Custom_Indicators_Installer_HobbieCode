@@ -183,7 +183,7 @@ def show_explanation():
 
 def show_about_me():
     msg = (
-        "SQXIndicatorInstaller v0.1\n\n"
+        "SQXIndicatorInstaller v0.2\n\n"
         "Author: Javier Luque\n"
         "GitHub: https://github.com/javils\n"
     )
