@@ -25,10 +25,28 @@ def is_valid_sqx_folder(folder):
     return all(check_file in file_names for check_file in check_files)
 
 
-def install_sxp_file(file, destination):
+def there_are_internal_script(zip_files, sqx_folder):
+    internal_sqx_folder = os.path.join(sqx_folder, 'internal')
+
+    for file in zip_files:
+        internal_file = os.path.join(internal_sqx_folder, file)
+        # ruta_archivo_destino = os.path.normpath(ruta_archivo_destino)
+
+        if os.path.exists(internal_file):
+            return True
+
+    return False
+
+
+def install_sxp_file(file, sqx_folder, destination):
+    uninstalled_file = None
     try:
         with zipfile.ZipFile(file, 'r') as zip_ref:
-            zip_ref.extractall(destination)
+            zip_files = zip_ref.namelist()
+            if not there_are_internal_script(zip_files, sqx_folder):
+                zip_ref.extractall(destination)
+            else:
+                uninstalled_file = file
     except zipfile.BadZipFile:
         messagebox.showerror("Error", "Invalid .sxp file format.")
     except FileNotFoundError:
@@ -36,25 +54,31 @@ def install_sxp_file(file, destination):
     except Exception as e:
         messagebox.showerror("Error", f"Unknown error {e}.")
 
+    return uninstalled_file
+
 
 def install_mql5_file(file, destination):
     mt5_file = os.path.join(destination, 'Metatrader5', 'Indicators')
-    shutil.copy(file, mt5_file)
+    if not os.path.exists(mt5_file):
+        shutil.copy(file, mt5_file)
 
 
 def install_mqh_file(file, destination):
-    mt5_file = os.path.join(destination, 'Metatrader5', 'Include')
-    shutil.copy(file, mt5_file)
+    mqh_file = os.path.join(destination, 'Metatrader5', 'Include')
+    if not os.path.exists(mqh_file):
+        shutil.copy(file, mqh_file)
 
 
 def install_mql4_file(file, destination):
     mt4_file = os.path.join(destination, 'Metatrader4', 'Indicators')
-    shutil.copy(file, mt4_file)
+    if not os.path.exists(mt4_file):
+        shutil.copy(file, mt4_file)
 
 
 def install_tradestation_file(file, destination):
     tradestation_file = os.path.join(destination, 'Tradestation')
-    shutil.copy(file, tradestation_file)
+    if not os.path.exists(tradestation_file):
+        shutil.copy(file, tradestation_file)
 
 
 def install_custom_blocks_files(file, destination):
@@ -107,11 +131,14 @@ def install_custom_indicators():
                              "You are selecting an invalid SQX folder, please select the correct one.")
         return
 
+    uninstalled_files = []
     for file in files:
         _, file_extension = os.path.splitext(file)
         file_extension = file_extension.lower()
         if file_extension == ".sxp":
-            install_sxp_file(file, user_sqx_folder)
+            uninstalled_file = install_sxp_file(file, sqx_folder, user_sqx_folder)
+            if uninstalled_file is not None:
+                uninstalled_files.append(uninstalled_file)
         elif file_extension == ".mq5":
             install_mql5_file(file, custom_indicators_folder)
         elif file_extension == ".mqh":
@@ -123,8 +150,16 @@ def install_custom_indicators():
         elif file_extension == ".xml":
             install_custom_blocks_files(file, user_sqx_folder)
 
-    messagebox.showinfo("Installation success",
-                         "The installation is finished!.")
+    if len(uninstalled_files) == 0:
+        messagebox.showinfo("Installation success", "The installation is finished!.")
+    else:
+        uninstalled_files_str = ""
+        for file in uninstalled_files:
+            uninstalled_files_str += f"{file}\n"
+
+        messagebox.showinfo("Installation finished",
+                            f"The installation is finished!.\nThere are some files that couldn't be installed because "
+                            f"already exist in SQX: \n\n {uninstalled_files}")
 
 
 def select_folder(entry):
