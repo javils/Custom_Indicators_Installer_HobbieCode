@@ -1,11 +1,11 @@
+import glob
+import os
+import shutil
 import sys
 import tkinter as tk
-import zipfile
-import os
-import glob
-import shutil
-from tkinter import filedialog, messagebox
 import xml.etree.ElementTree as ET
+import zipfile
+from tkinter import filedialog, messagebox
 
 
 def find_files(folder):
@@ -17,12 +17,22 @@ def there_are_scripts(folder):
 
 
 def is_valid_sqx_folder(folder):
-    files = glob.glob(os.path.join(folder, '**', '*.exe'), recursive=True)
-    check_files = ["StrategyQuantX.exe", "sqcli.exe", "CodeEditor.exe"]
+    sqx_sub_files = (
+        os.path.join(folder, "StrategyQuantX.exe"),
+        os.path.join(folder, "sqcli.exe"),
+        os.path.join(folder, "CodeEditor.exe"),
+    )
 
-    file_names = [os.path.basename(file) for file in files]
+    return all(os.path.exists(file) for file in sqx_sub_files)
 
-    return all(check_file in file_names for check_file in check_files)
+
+def is_valid_mt5_folder(mt5_folder):
+    mt5_sub_folders = (
+        os.path.join(mt5_folder, "MQL5"),
+        os.path.join(mt5_folder, "bases"),
+        os.path.join(mt5_folder, "config"),
+    )
+    return all(os.path.exists(folder) for folder in mt5_sub_folders)
 
 
 def there_are_internal_script(zip_files, sqx_folder):
@@ -58,27 +68,31 @@ def install_sxp_file(file, sqx_folder, destination):
 
 
 def install_mql5_file(file, destination):
-    mt5_file = os.path.join(destination, 'Metatrader5', 'Indicators')
-    if not os.path.exists(mt5_file):
-        shutil.copy(file, mt5_file)
+    indicators_folder = os.path.join(destination, 'Metatrader5', 'Indicators')
+    if not os.path.exists(indicators_folder):
+        os.mkdir(indicators_folder)
+    shutil.copy(file, indicators_folder)
 
 
 def install_mqh_file(file, destination):
-    mqh_file = os.path.join(destination, 'Metatrader5', 'Include')
-    if not os.path.exists(mqh_file):
-        shutil.copy(file, mqh_file)
+    include_folder = os.path.join(destination, 'Metatrader5', 'Include')
+    if not os.path.exists(include_folder):
+        os.mkdir(include_folder)
+    shutil.copy(file, include_folder)
 
 
 def install_mql4_file(file, destination):
-    mt4_file = os.path.join(destination, 'Metatrader4', 'Indicators')
-    if not os.path.exists(mt4_file):
-        shutil.copy(file, mt4_file)
+    indicators_folder = os.path.join(destination, 'Metatrader4', 'Indicators')
+    if not os.path.exists(indicators_folder):
+        os.mkdir(indicators_folder)
+    shutil.copy(file, indicators_folder)
 
 
 def install_tradestation_file(file, destination):
-    tradestation_file = os.path.join(destination, 'Tradestation')
-    if not os.path.exists(tradestation_file):
-        shutil.copy(file, tradestation_file)
+    tradestation_folder = os.path.join(destination, 'Tradestation')
+    if not os.path.exists(tradestation_folder):
+        os.mkdir(tradestation_folder)
+    shutil.copy(file, tradestation_folder)
 
 
 def install_custom_blocks_files(file, destination):
@@ -114,9 +128,17 @@ def install_custom_blocks_files(file, destination):
     element_tree.write(custom_blocks_file, encoding='utf-8', xml_declaration=True)
 
 
+def install_into_mt5(sqx_folder, mt5_folder):
+    custom_indicator_folder = os.path.join(sqx_folder, "custom_indicators", "MetaTrader5")
+    mql5_folder = os.path.join(mt5_folder, "MQL5")
+
+    shutil.copytree(custom_indicator_folder, mql5_folder, dirs_exist_ok=True)
+
+
 def install_custom_indicators():
     scripts_folder = entry_scripts_folder.get()
     sqx_folder = entry_sqx_folder.get()
+    mt5_folder = entry_mt5_folder.get()
     user_sqx_folder = os.path.join(sqx_folder, 'user')
     custom_indicators_folder = os.path.join(sqx_folder, 'custom_indicators')
     files = find_files(scripts_folder)
@@ -129,6 +151,11 @@ def install_custom_indicators():
     if not is_valid_sqx_folder(sqx_folder):
         messagebox.showerror("Invalid SQX folder",
                              "You are selecting an invalid SQX folder, please select the correct one.")
+        return
+
+    if not is_valid_mt5_folder(mt5_folder):
+        messagebox.showerror("Invalid MT5 folder",
+                             "You are selecting an invalid MT5 folder, please select the correct one.")
         return
 
     uninstalled_files = []
@@ -149,6 +176,8 @@ def install_custom_indicators():
             install_tradestation_file(file, custom_indicators_folder)
         elif file_extension == ".xml":
             install_custom_blocks_files(file, user_sqx_folder)
+
+    install_into_mt5(sqx_folder, mt5_folder)
 
     if len(uninstalled_files) == 0:
         messagebox.showinfo("Installation success", "The installation is finished!.")
@@ -175,15 +204,16 @@ def show_explanation():
         "0. Close StrategyQuant X\n"
         "1. Select the folder with the downloaded scripts.\n"
         "2. Select the folder where your SQX is installed.\n"
-        "3. Press Install button.\n"
-        "4. Restart StrategyQuant X.\n"
+        "3. Select the folder where your MT5 Terminal is installed. (To get this, go to Metatrades 5 > File > Open Data Folder and copy the path)\n"
+        "4. Press Install button.\n"
+        "5. Restart StrategyQuant X.\n"
     )
     messagebox.showinfo("Install info", msg)
 
 
 def show_about_me():
     msg = (
-        "SQXIndicatorInstaller v0.2\n\n"
+        "SQXIndicatorInstaller v0.3\n\n"
         "Author: Javier Luque\n"
         "GitHub: https://github.com/javils\n"
     )
@@ -199,7 +229,7 @@ root = tk.Tk()
 root.title("SQX Custom Indicators Installer")
 root.resizable(False, False)
 width = 500
-height = 150
+height = 200
 x = (root.winfo_screenwidth() - width) // 2
 y = (root.winfo_screenheight() - height) // 2
 root.geometry(f"{width}x{height}+{x}+{y}")
@@ -231,8 +261,17 @@ entry_sqx_folder.grid(row=1, column=1, padx=10, pady=10)
 button_scripts_sqx_folder_selector = tk.Button(root, text="...", command=lambda: select_folder(entry_sqx_folder))
 button_scripts_sqx_folder_selector.grid(row=1, column=2, padx=10, pady=10)
 
+label_mt5_folder = tk.Label(root, text="MT5 Terminal Folder:")
+label_mt5_folder.grid(row=2, column=0, padx=10, pady=10, sticky=tk.W)
+
+entry_mt5_folder = tk.Entry(root, width=50)
+entry_mt5_folder.grid(row=2, column=1, padx=10, pady=10)
+
+button_scripts_mt5_folder_selector = tk.Button(root, text="...", command=lambda: select_folder(entry_mt5_folder))
+button_scripts_mt5_folder_selector.grid(row=2, column=2, padx=10, pady=10)
+
 button_install = tk.Button(root, text="Install", command=install_custom_indicators)
-button_install.grid(row=2, column=0, columnspan=3, pady=20)
+button_install.grid(row=3, column=0, columnspan=3, pady=20)
 
 # This is here because a bug, if I put the icon in the top of the program, then the sizes of the windows changes.
 root.iconbitmap(get_resource_path("./icon/icon.ico"))
