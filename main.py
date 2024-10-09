@@ -40,7 +40,6 @@ def there_are_internal_script(zip_files, sqx_folder):
 
     for file in zip_files:
         internal_file = os.path.join(internal_sqx_folder, file)
-        # ruta_archivo_destino = os.path.normpath(ruta_archivo_destino)
 
         if os.path.exists(internal_file):
             return True
@@ -153,7 +152,7 @@ def install_custom_indicators():
                              "You are selecting an invalid SQX folder, please select the correct one.")
         return
 
-    if not is_valid_mt5_folder(mt5_folder):
+    if mt5_folder != "" and not is_valid_mt5_folder(mt5_folder):
         messagebox.showerror("Invalid MT5 folder",
                              "You are selecting an invalid MT5 folder, please select the correct one.")
         return
@@ -177,7 +176,8 @@ def install_custom_indicators():
         elif file_extension == ".xml":
             install_custom_blocks_files(file, user_sqx_folder)
 
-    install_into_mt5(sqx_folder, mt5_folder)
+    if mt5_folder != "":
+        install_into_mt5(sqx_folder, mt5_folder)
 
     if len(uninstalled_files) == 0:
         messagebox.showinfo("Installation success", "The installation is finished!.")
